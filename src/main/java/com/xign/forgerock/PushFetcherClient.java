@@ -55,10 +55,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
  *
  * @author palle
  */
-public class PushFetcherClient {
+class PushFetcherClient {
 
     private final String clientId, keyPassword, keyAlias, trustAlias;
-    private SecretKey secretKey;
     private final URL endpoint;
     private final KeyStore clientKeys, trustStore;
     private final X509Certificate trustCert;
@@ -67,10 +66,9 @@ public class PushFetcherClient {
 
     private HttpsURLConnection urlConnection;
     private HttpURLConnection urlConnectionNoSSL;
-    private final CookieManager cookieManager;
     private final JsonParser PARSER = new JsonParser();
 
-    public PushFetcherClient(InputStream pin, X509Certificate httpsTrust) throws XignTokenException {
+    PushFetcherClient(InputStream pin, X509Certificate httpsTrust) throws XignTokenException {
         Properties properties = new Properties();
         try {
             properties.load(pin);
@@ -115,14 +113,14 @@ public class PushFetcherClient {
             String encodedSignatureTrustCert = properties.getProperty("client.trustcert");
             in = new ByteArrayInputStream(Base64.getDecoder().decode(encodedSignatureTrustCert.getBytes()));
             CertificateFactory cf = CertificateFactory.getInstance("X.509", new BouncyCastleProvider());
-            this.trustStore.setCertificateEntry(trustAlias, (X509Certificate) cf.generateCertificate(in));
+            this.trustStore.setCertificateEntry(trustAlias, cf.generateCertificate(in));
 
         } catch (IOException | NoSuchAlgorithmException | CertificateException | KeyStoreException ex) {
             Logger.getLogger(PushFetcherClient.class.getName()).log(Level.SEVERE, null, ex);
             throw new XignTokenException("error constructing requester");
         }
 
-        this.cookieManager = new CookieManager();
+        CookieManager cookieManager = new CookieManager();
         CookieHandler.setDefault(cookieManager);
 
         this.trustCert = httpsTrust;
@@ -139,8 +137,8 @@ public class PushFetcherClient {
 
     }
 
-    public JWTClaims requestPushWithUsername(String userid, UserInfoSelector uiselector) throws XignTokenException {
-        JsonObject resultObject = null;
+    JWTClaims requestPushWithUsername(String userid, UserInfoSelector uiselector) throws XignTokenException {
+        JsonObject resultObject;
 
         try {
             PrivateKey pkey = (PrivateKey) clientKeys.getKey("xyz", "changeit".toCharArray());
@@ -163,12 +161,13 @@ public class PushFetcherClient {
             o.addProperty("signature", signature);
 
             String result = sendMessage(o);
+            assert result != null;
             resultObject = PARSER.parse(result).getAsJsonObject();
 
         } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException
                 | IOException | CertificateException | InvalidKeyException
                 | InvalidKeySpecException | SignatureException
-                | KeyManagementException | URISyntaxException ex) {
+                | KeyManagementException ex) {
             LOG.log(Level.SEVERE, null, ex);
             throw new XignTokenException("error requesting push authentication");
         }
@@ -178,7 +177,7 @@ public class PushFetcherClient {
 
     private String sendMessage(JsonObject to) throws CertificateException,
             NoSuchAlgorithmException, KeyStoreException, KeyManagementException,
-            URISyntaxException, IOException {
+            IOException {
         try {
             makeConnection();
         } catch (NoSuchProviderException ex) {
@@ -216,11 +215,11 @@ public class PushFetcherClient {
     private JsonObject readStream(InputStream in) throws IOException {
         JsonParser p = new JsonParser();
         byte[] msgBytes = IOUtils.toByteArray(in);
-        JsonObject o = p.parse(new String(msgBytes)).getAsJsonObject();
-        return o;
+        return p.parse(new String(msgBytes)).getAsJsonObject();
     }
 
-    private void makeConnection() throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, KeyManagementException, URISyntaxException, NoSuchProviderException {
+    private void makeConnection() throws IOException, KeyStoreException, CertificateException,
+             NoSuchAlgorithmException, KeyManagementException, NoSuchProviderException {
         if (isSSL) {
             SSLContext sslContext;
             if (trustCert != null) {
