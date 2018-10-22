@@ -8,11 +8,13 @@ package com.xign.forgerock;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.xign.xignmanager.common.Crypto;
-import com.xign.xignmanager.common.JWTClaims;
-import com.xign.xignmanager.common.UserInfoSelector;
+
 import com.xign.forgerock.exception.XignTokenException;
+import com.xign.forgerock.util.Crypto;
+import com.xign.forgerock.util.JWTClaims;
+import com.xign.forgerock.util.UserInfoSelector;
 import com.xign.forgerock.util.Util;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -217,7 +219,7 @@ class PushFetcherClient {
     }
 
     private void makeConnection() throws IOException, KeyStoreException, CertificateException,
-             NoSuchAlgorithmException, KeyManagementException, NoSuchProviderException {
+            NoSuchAlgorithmException, KeyManagementException, NoSuchProviderException {
         if (isSSL) {
             SSLContext sslContext;
             if (trustCert != null) {

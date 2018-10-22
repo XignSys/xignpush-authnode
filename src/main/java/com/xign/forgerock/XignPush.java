@@ -19,9 +19,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.assistedinject.Assisted;
 import com.sun.identity.idm.AMIdentity;
 import com.sun.identity.shared.debug.Debug;
-import com.xign.xignmanager.common.JWTClaims;
-import com.xign.xignmanager.common.UserInfoSelector;
+
 import com.xign.forgerock.exception.XignTokenException;
+import com.xign.forgerock.util.JWTClaims;
+import com.xign.forgerock.util.UserInfoSelector;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -57,6 +58,7 @@ public class XignPush extends AbstractDecisionNode {
      * Configuration for the node.
      */
     public interface Config {
+
         //TODO Remove filestore config, add as configuration option in node so we don't need to do file I/O for every
         // process call
         //TODO Add property name in xignAuthNode for localization
@@ -109,7 +111,7 @@ public class XignPush extends AbstractDecisionNode {
                 UserInfoSelector selector = new UserInfoSelector();
                 selector.setNickname(1);
                 selector.setEmail(1);
-                
+
                 // request push login for username and retrieve token
                 PushFetcherClient pushClient = new PushFetcherClient(fin, null);
                 JWTClaims claims = pushClient.requestPushWithUsername(inputUsername, selector);
